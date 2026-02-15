@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>2026 璀璨之约：张展硕致许晴的马年薄礼</title>
+    <style>
+        :root {
+            /* 深度优化的文字与玻璃色值 */
+            --text-dark: #1a1a1c;
+            --text-muted: #3a3a3c;
+            --glass-base: rgba(255, 255, 255, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.7);
+            --glow-color: rgba(255, 255, 255, 0.8);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body, html { 
+            width: 100%; height: 100%; 
+            overflow: hidden; 
+            background: #fff; 
+            font-family: -apple-system, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
+        }
+
+        /* 动态渐变背景：拒绝沉闷 */
+        #dynamic-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+            transition: background 1.8s cubic-bezier(0.45, 0, 0.55, 1);
+        }
+
+        /* 画布管理系统 */
+        canvas { position: fixed; top: 0; left: 0; pointer-events: none; width: 100%; height: 100%; }
+        #firework-canvas { z-index: 2; }
+        #word-canvas { z-index: 5; }
+        #confetti-canvas { z-index: 10; }
+
+        /* --- 强化版动态流光玻璃卡片 --- */
+        .glass-card {
+            background: var(--glass-base);
+            backdrop-filter: blur(40px) saturate(200%);
+            -webkit-backdrop-filter: blur(40px) saturate(200%);
+            width: 85%;
+            max-width: 380px;
+            padding: 3.5rem 2rem;
+            border-radius: 45px;
+            border: 1.5px solid var(--glass-border);
+            text-align: center;
+            position: relative;
+            z-index: 20;
+            overflow: hidden;
+            box-shadow: 
+                0 30px 60px -12px rgba(0, 0, 0, 0.18),
+                inset 0 0 30px rgba(255, 255, 255, 0.3);
+            /* 卡片入场浮动效果 */
+            transform: translateY(20px);
+            transition: transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* 卡片流光特效 (Iridescent Effect) */
+        .glass-card::before {
+            content: "";
+            position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: conic-gradient(
+                from 180deg at 50% 50%,
+                transparent 0deg,
+                rgba(255, 255, 255, 0.3) 90deg,
+                transparent 180deg,
+                rgba(255, 255, 255, 0.3) 270deg,
+                transparent 360deg
+            );
+            animation: rotateGlow 6s linear infinite;
+            z-index: -1;
+        }
+
+        @keyframes rotateGlow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* 文字样式：全深色，极高对比度 */
+        h1 {
+            font-size: 1.85rem;
+            color: var(--text-dark);
+            margin-bottom: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.2;
+            text-shadow: 0 2px 10px rgba(255,255,255,0.5);
+        }
+
+        p {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            line-height: 1.8;
+            margin-bottom: 2.5rem;
+            font-weight: 500;
+            padding: 0 10px;
+        }
+
+        .btn-next {
+            background: var(--text-dark);
+            color: #fff;
+            padding: 18px 45px;
+            border-radius: 60px;
+            border: none;
+            font-size: 1.05rem;
+            font-weight: 700;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-next::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: btnShine 3s infinite;
+        }
+        @keyframes btnShine { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
+        .btn-next:active { transform: scale(0.92); opacity: 0.9; }
+
+        /* --- 页面转场矩阵 (每页不同) --- */
+        .page {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            visibility: hidden; opacity: 0;
+            pointer-events: none;
+            transition: all 1.2s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+        .page.active { visibility: visible; opacity: 1; pointer-events: auto; }
+
+        /* 转场类型定义 */
+        .trans-circle { clip-path: circle(0% at 50% 50%); }
+        .trans-circle.active { clip-path: circle(150% at 50% 50%); }
+
+        .trans-flip { transform: perspective(1000px) rotateY(-180deg); }
+        .trans-flip.active { transform: perspective(1000px) rotateY(0deg); }
+
+        .trans-slide { transform: translateX(100%) scale(0.8); }
+        .trans-slide.active { transform: translateX(0) scale(1); }
+
+        .trans-blind { clip-path: inset(0 100% 0 0); }
+        .trans-blind.active { clip-path: inset(0 0 0 0); }
+
+        .trans-zoom { transform: scale(0); opacity: 0; }
+        .trans-zoom.active { transform: scale(1); opacity: 1; }
+
+        .trans-wipe { clip-path: polygon(0 0, 0 0, 0 100%, 0 100%); }
+        .trans-wipe.active { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+
+        .trans-glitch { filter: blur(20px); transform: scale(1.2); }
+        .trans-glitch.active { filter: blur(0); transform: scale(1); }
+
+    </style>
+</head>
+<body>
+
+    <div id="dynamic-bg" style="background: linear-gradient(135deg, #FF9A8B 0%, #FF6A88 100%);"></div>
+
+    <canvas id="firework-canvas"></canvas>
+    <canvas id="word-canvas"></canvas>
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="page trans-circle active" data-bg="linear-gradient(135deg, #FF9A8B 0%, #FF6A88 100%)">
+        <div class="glass-card">
+            <h1>2026 · <span style="color:#d63031">坚不可摧</span></h1>
+            <p>乙巳蛇年，我们于人海相遇<br>以<b>无畏</b>之姿开启马年新篇<br>所有沉闷都将散场，唯美长存</p>
+            <button class="btn-next" onclick="nextPage()">开启旅程</button>
+        </div>
+    </div>
+
+    <div class="page trans-flip" data-bg="linear-gradient(135deg, #2af598 0%, #009efd 100%)">
+        <div class="glass-card">
+            <h1>人海 · <span style="color:#0984e3">相见</span></h1>
+            <p>找到“另一个自己”是种奇迹<br>三观镜像，精神同频<br>很高兴，与你相遇</p>
+            <button class="btn-next" onclick="nextPage()">深度共鸣</button>
+        </div>
+    </div>
+
+    <div class="page trans-slide" id="kw-trigger" data-bg="linear-gradient(135deg, #f6d365 0%, #fda085 100%)">
+        <div class="glass-card">
+            <h1>灵魂 · <span style="color:#e67e22">祛魅</span></h1>
+            <p>不需要滤镜，不需要客套，不需要担心<br>在这个荒诞的世界里<br>你是我最放心、最相互理解的朋友</p>
+            <button class="btn-next" onclick="nextPage()">见证奇迹</button>
+        </div>
+    </div>
+
+    <div class="page trans-blind" data-bg="linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)">
+        <div class="glass-card">
+            <h1>清醒 · <span style="color:#2980b9">独立</span></h1>
+            <p>不被艰难险阻所围困<br>适中保持阳光乐观积极向上<br>许晴，你始终是那个绝色主角</p>
+            <button class="btn-next" onclick="nextPage()">更进一步</button>
+        </div>
+    </div>
+
+    <div class="page trans-zoom" data-bg="linear-gradient(135deg, #E3E3E3 0%, #5D6D7E 100%)" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+        <div class="glass-card">
+            <h1>明艳 · <span style="color:#8e44ad">自由</span></h1>
+            <p>愿你如旷野的风，不被定义<br>眼中有星辰，手中有余温<br>2026，活成你最爱的模样</p>
+            <button class="btn-next" onclick="nextPage()">奔向未来</button>
+        </div>
+    </div>
+
+    <div class="page trans-wipe" data-bg="linear-gradient(135deg, #667eea 0%, #764ba2 100%)">
+        <div class="glass-card">
+            <h1>万事 · <span style="color:#fff; text-shadow:0 0 10px rgba(0,0,0,0.2)">胜意</span></h1>
+            <p style="color:rgba(255,255,255,0.85)">所有期待的“越来越好”<br>都在我们的自由意志的掌控之中<br>在顶峰处，我们终将重逢</p>
+            <button class="btn-next" style="background:#fff; color:#764ba2" onclick="nextPage()">引爆盛典</button>
+        </div>
+    </div>
+
+    <div class="page trans-glitch" id="final-step" data-bg="linear-gradient(135deg, #ee0979 0%, #ff6a00 100%)">
+        <div class="glass-card" style="background: rgba(255,255,255,0.85);">
+            <h1 style="color: #d63031; font-size: 2rem;">2026 · <span style="animation: pulse 1s infinite alternate">宏图大展</span></h1>
+            <p>许晴：让这漫天花雨为你加冕<br>马年大吉，天天开心<br>我希望我们的友谊<b style="color:#d63031">永久有效</b></p>
+            <button class="btn-next" style="background:#d63031" onclick="location.reload()">再看一次</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 核心状态机 ---
+        let currentIdx = 0;
+        const pages = document.querySelectorAll('.page');
+        const bg = document.getElementById('dynamic-bg');
+        let isEvolutionFinal = false;
+
+        function nextPage() {
+            if (currentIdx < pages.length - 1) {
+                pages[currentIdx].classList.remove('active');
+                currentIdx++;
+                setTimeout(() => {
+                    pages[currentIdx].classList.add('active');
+                    bg.style.background = pages[currentIdx].dataset.bg;
+                }, 150);
+
+                // 特效演化调度器
+                if(currentIdx === 2) startWordEngine(); // 第三页关键词
+                if(currentIdx === 6) triggerGrandFinale(); // 第七页大爆发
+            }
+        }
+
+        // --- 视觉画布引擎 ---
+        const fwCanvas = document.getElementById('firework-canvas');
+        const cfCanvas = document.getElementById('confetti-canvas');
+        const wdCanvas = document.getElementById('word-canvas');
+        const fwCtx = fwCanvas.getContext('2d');
+        const cfCtx = cfCanvas.getContext('2d');
+        const wdCtx = wdCanvas.getContext('2d');
+
+        function resize() {
+            fwCanvas.width = cfCanvas.width = wdCanvas.width = window.innerWidth;
+            fwCanvas.height = cfCanvas.height = wdCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // --- 1. 演化型彩带引擎 ---
+        let confettis = [];
+        class Confetti {
+            constructor() { this.init(); }
+            init() {
+                this.x = Math.random() * cfCanvas.width;
+                this.y = Math.random() * cfCanvas.height - cfCanvas.height;
+                this.color = ['#FFD700', '#FF4757', '#74b9ff', '#55efc4', '#ffffff'][Math.floor(Math.random()*5)];
+                this.size = Math.random() * 8 + 4;
+                // 演化逻辑：随着页面推进，彩带变得更狂暴
+                const power = currentIdx * 0.8 + 1;
+                this.vy = (Math.random() * 2 + 1) * power;
+                this.vx = (Math.random() - 0.5) * power;
+                this.rot = Math.random() * 360;
+                this.rSpeed = (Math.random() - 0.5) * 10;
+            }
+            update() {
+                this.y += this.vy;
+                this.x += this.vx;
+                this.rot += this.rSpeed;
+                if (this.y > cfCanvas.height) this.init();
+            }
+            draw() {
+                cfCtx.save();
+                cfCtx.translate(this.x, this.y);
+                cfCtx.rotate(this.rot * Math.PI / 180);
+                cfCtx.fillStyle = this.color;
+                cfCtx.fillRect(-this.size/2, -this.size/2, this.size, this.size/2);
+                cfCtx.restore();
+            }
+        }
+
+        // 初始化基础彩带 (第一阶段)
+        for(let i=0; i<60; i++) confettis.push(new Confetti());
+
+        // --- 2. 关键词粒子引擎 ---
+        let words = [];
+        const keywordPool = ["灵魂共振", "精神同频", "越来越好", "明艳动人", "清醒独立", "逻辑祛魅", "马年大吉", "乐观向上", "万事胜意", "自由如风"];
+        class FloatingWord {
+            constructor() {
+                this.text = keywordPool[Math.floor(Math.random()*keywordPool.length)];
+                this.reset();
+            }
+            reset() {
+                this.x = wdCanvas.width / 2;
+                this.y = wdCanvas.height / 2;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 5 + 3;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.scale = 0.1;
+                this.alpha = 0;
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                this.scale += 0.025; this.alpha += 0.04;
+                if (this.alpha > 1) this.alpha = 1;
+                if (this.x < 0 || this.x > wdCanvas.width || this.y < 0 || this.y > wdCanvas.height) this.reset();
+            }
+            draw() {
+                wdCtx.save();
+                wdCtx.globalAlpha = this.alpha;
+                wdCtx.font = `bold ${this.scale}rem sans-serif`;
+                wdCtx.fillStyle = "#1a1a1c";
+                wdCtx.textAlign = "center";
+                wdCtx.fillText(this.text, this.x, this.y);
+                wdCtx.restore();
+            }
+        }
+        function startWordEngine() { words = Array.from({length: 12}, () => new FloatingWord()); }
+
+        // --- 3. 高级烟花物理 (终章增强) ---
+        let particles = [];
+        function createFirework(x, y) {
+            const count = isEvolutionFinal ? 120 : 60;
+            const color = `hsl(${Math.random()*360}, 100%, 60%)`;
+            for(let i=0; i<count; i++){
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 6 + 2;
+                particles.push({
+                    x, y, color,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    alpha: 1,
+                    decay: Math.random() * 0.015 + 0.01
+                });
+            }
+        }
+
+        function triggerGrandFinale() {
+            isEvolutionFinal = true;
+            // 密度加倍
+            for(let i=0; i<200; i++) confettis.push(new Confetti());
+            setInterval(() => {
+                createFirework(Math.random()*fwCanvas.width, Math.random()*fwCanvas.height*0.5);
+            }, 300);
+        }
+
+        // --- 主渲染循环 ---
+        function animate() {
+            // 烟花层擦除 (亮色友好模式)
+            fwCtx.globalCompositeOperation = 'destination-out';
+            fwCtx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+            fwCtx.fillRect(0, 0, fwCanvas.width, fwCanvas.height);
+            fwCtx.globalCompositeOperation = 'source-over';
+
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy; p.vy += 0.1; p.alpha -= p.decay;
+                if (p.alpha > 0) {
+                    fwCtx.globalAlpha = p.alpha;
+                    fwCtx.beginPath(); fwCtx.arc(p.x, p.y, 2, 0, Math.PI*2);
+                    fwCtx.fillStyle = p.color; fwCtx.fill();
+                } else particles.splice(i, 1);
+            });
+
+            // 关键词层
+            wdCtx.clearRect(0,0, wdCanvas.width, wdCanvas.height);
+            if (currentIdx === 2) words.forEach(w => { w.update(); w.draw(); });
+            // 彩带层演化渲染
+            cfCtx.clearRect(0,0, cfCanvas.width, cfCanvas.height);
+            confettis.forEach(c => { c.update(); c.draw(); });
+            // 自动背景烟花 (随机出现)
+            if (Math.random() < 0.02) createFirework(Math.random()*fwCanvas.width, Math.random()*fwCanvas.height*0.4);
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+</body>
+</html>
